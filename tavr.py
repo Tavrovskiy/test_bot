@@ -1,8 +1,10 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, CallbackContext
+from telegram.ext import *
 import random
+from asyncio import Queue
 
 TOKEN = '7075523720:AAGIK3_imz_u7y9Y0sbJCGkroCzAKY2X-K8'
+botQueue = Queue()
 
 # Список советов
 advice_list = [
@@ -38,27 +40,27 @@ advice_list = [
     "Будьте открыты к новым возможностям."
 ]
 
-def start(update: Update, context: CallbackContext) -> None:
+async def start(update: Update, context: CallbackContext) -> None:
     keyboard = [
         [InlineKeyboardButton("Получить совет", callback_data='get_advice')],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Привет! Нажмите на кнопку, чтобы получить случайный совет.', reply_markup=reply_markup)
+    await update.message.reply_text('Привет! Нажмите на кнопку, чтобы получить случайный совет.', reply_markup=reply_markup)
 
-def button(update: Update, context: CallbackContext) -> None:
+async def button(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query.answer()
     advice = random.choice(advice_list)
-    query.edit_message_text(text=f"Совет: {advice}")
+    await query.edit_message_text(text=f"Совет: {advice}")
 
 def main() -> None:
-    updater = Updater(TOKEN)
+    application = Application.builder().token(TOKEN).build()
 
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CallbackQueryHandler(button))
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CallbackQueryHandler(button))
 
-    updater.start_polling()
-    updater.idle()
+    application.run_polling(1.0)
+    application.idle()
 
 if __name__ == '__main__':
     main()
